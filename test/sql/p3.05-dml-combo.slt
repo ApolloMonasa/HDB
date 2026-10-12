@@ -1,0 +1,71 @@
+# HDB sqllogictest：DML 组合拳——UPDATE/DELETE/主键约束/复合条件
+
+statement ok
+CREATE TABLE s (id INT PRIMARY KEY, name VARCHAR(12), score INT)
+
+statement ok
+INSERT INTO s VALUES (1, 'alice', 60), (2, 'bob', 75), (3, 'carol', 88), (4, 'dave', 45)
+
+# 主键冲突必须报错
+statement error
+INSERT INTO s VALUES (1, 'alice2', 99)
+
+# 复合 WHERE（AND）：alice(60) 与 bob(75) 都满足
+query
+SELECT name FROM s WHERE score >= 60 AND score < 80
+----
+alice
+bob
+
+# OR 与 NOT（结合括号）
+query
+SELECT name FROM s WHERE NOT (score >= 60) OR id = 3
+----
+carol
+dave
+
+# UPDATE 原位（等宽）与 WHERE 定点
+statement ok
+UPDATE s SET score = 100 WHERE id = 2
+
+query
+SELECT score FROM s WHERE id = 2
+----
+100
+
+# UPDATE 带表达式右值
+statement ok
+UPDATE s SET score = score + 5 WHERE id = 1
+
+query
+SELECT score FROM s WHERE id = 1
+----
+65
+
+# DELETE 复合条件后计数
+statement ok
+DELETE FROM s WHERE score < 70 OR id = 4
+
+query
+SELECT COUNT(id) FROM s
+----
+2
+
+# 剩余行验证
+query
+SELECT id, name, score FROM s ORDER BY id
+----
+2|bob|100
+3|carol|88
+
+# 删空再重插（主键复用测试）
+statement ok
+DELETE FROM s
+
+statement ok
+INSERT INTO s VALUES (9, 'new', 1)
+
+query
+SELECT COUNT(id) FROM s
+----
+1

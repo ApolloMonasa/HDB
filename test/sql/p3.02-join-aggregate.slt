@@ -1,0 +1,40 @@
+# HDB sqllogictest：连接与聚合
+
+statement ok
+CREATE TABLE dept (did INT PRIMARY KEY, dname VARCHAR(10))
+
+statement ok
+CREATE TABLE emp (eid INT PRIMARY KEY, dep INT, salary INT)
+
+statement ok
+INSERT INTO dept VALUES (1, 'dev'), (2, 'ops')
+
+statement ok
+INSERT INTO emp VALUES (10, 1, 100), (11, 1, 200), (12, 2, 300), (13, 2, 400)
+
+query
+SELECT dept.dname, emp.eid FROM dept JOIN emp ON dept.did = emp.dep ORDER BY emp.eid
+----
+dev|10
+dev|11
+ops|12
+ops|13
+
+query
+SELECT dep, COUNT(eid), SUM(salary) FROM emp GROUP BY dep
+----
+1|2|300
+2|2|700
+
+query
+SELECT dep, MAX(salary) FROM emp GROUP BY dep HAVING MAX(salary) > 350
+----
+2|400
+
+statement ok
+DELETE FROM emp WHERE dep = 2
+
+query
+SELECT COUNT(eid) FROM emp
+----
+2

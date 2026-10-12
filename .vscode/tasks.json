@@ -1,0 +1,24 @@
+{
+    // HDB 常用构建/测试任务（搭配 CMake Tools 扩展或直接用快捷键 Ctrl+Shift+B 构建）
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "HDB: 配置并构建全部",
+            "type": "shell",
+            "command": "cmake -B build && cmake --build build --parallel",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "HDB: 运行全部测试",
+            "type": "shell",
+            "command": "ctest --test-dir build --output-on-failure",
+            "group": "test",
+            "dependsOn": "HDB: 配置并构建全部",
+            "problemMatcher": []
+        }
+    ]
+}

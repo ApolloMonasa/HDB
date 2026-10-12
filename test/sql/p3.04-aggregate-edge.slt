@@ -1,0 +1,49 @@
+# HDB sqllogictest：聚合边界——空表/空组/HAVING 全滤/多聚合函数
+
+statement ok
+CREATE TABLE t (a INT, b INT)
+
+# 空表的全表聚合：COUNT 输出一行 0（教学约定：无 GROUP BY 的聚合整个输入是一个桶）
+query
+SELECT COUNT(a) FROM t
+----
+0
+
+statement ok
+INSERT INTO t VALUES (1, 10), (1, 20), (2, 30), (3, 40)
+
+# 多聚合函数并列
+query
+SELECT a, COUNT(b), SUM(b), MIN(b), MAX(b) FROM t GROUP BY a
+----
+1|2|30|10|20
+2|1|30|30|30
+3|1|40|40|40
+
+# HAVING 全部滤掉：输出空
+query
+SELECT a, COUNT(b) FROM t GROUP BY a HAVING COUNT(b) > 5
+----
+
+# HAVING 边界：a=1 组 MAX(b)=20 不满足 >=30，仅 2、3 组通过
+query
+SELECT a FROM t GROUP BY a HAVING MAX(b) >= 30
+----
+2
+3
+
+# 单组聚合与 WHERE 预过滤
+query
+SELECT COUNT(a), SUM(b) FROM t WHERE a > 1
+----
+2|70
+
+# 删除后再聚合
+statement ok
+DELETE FROM t WHERE a = 3
+
+query
+SELECT a, COUNT(b) FROM t GROUP BY a
+----
+1|2
+2|1

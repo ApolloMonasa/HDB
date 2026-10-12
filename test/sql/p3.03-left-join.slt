@@ -1,0 +1,38 @@
+# HDB sqllogictest：LEFT JOIN 与 NULL 补齐语义
+
+statement ok
+CREATE TABLE dept (did INT PRIMARY KEY, dname VARCHAR(10))
+
+statement ok
+CREATE TABLE emp (eid INT PRIMARY KEY, dep INT, name VARCHAR(10))
+
+statement ok
+INSERT INTO dept VALUES (1, 'dev'), (2, 'ops'), (3, 'hr')
+
+statement ok
+INSERT INTO emp VALUES (10, 1, 'alice'), (11, 1, 'bob'), (12, 2, 'carol')
+
+# 内连接：无 hr 部门员工，hr 不出现
+query
+SELECT dept.dname, emp.name FROM dept INNER JOIN emp ON dept.did = emp.dep ORDER BY emp.eid
+----
+dev|alice
+dev|bob
+ops|carol
+
+# LEFT JOIN：hr 部门无匹配，补 NULL 行
+query
+SELECT dept.dname, emp.name FROM dept LEFT JOIN emp ON dept.did = emp.dep ORDER BY dept.did
+----
+dev|alice
+dev|bob
+ops|carol
+hr|NULL
+
+# LEFT JOIN 反向：员工表在左，全员保留（本数据员工都有部门）
+query
+SELECT emp.name, dept.dname FROM emp LEFT JOIN dept ON emp.dep = dept.did ORDER BY emp.eid
+----
+alice|dev
+bob|dev
+carol|ops

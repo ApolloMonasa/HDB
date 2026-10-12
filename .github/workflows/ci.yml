@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: ${{ matrix.os }} / ${{ matrix.compiler }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-22.04]
+        compiler: [gcc]
+        include:
+          - os: ubuntu-24.04
+            compiler: clang
+    env:
+      CC: ${{ matrix.compiler }}
+      CXX: ${{ matrix.compiler == 'clang' && 'clang++' || 'g++' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: sudo ./build_support/packages.sh
+      - name: Configure
+        run: cmake -B build
+      - name: Build
+        run: cmake --build build --parallel "$(nproc)"
+      # 骨架开箱即绿的给定组件测试：其余测试在你完成对应实验后转绿
+      - name: Given-component tests
+        run: ctest --test-dir build -R disk_manager_test --output-on-failure

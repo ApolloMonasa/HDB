@@ -1,0 +1,39 @@
+# HDB sqllogictest：基础 DDL/DML/查询
+# 运行：./build/tools/sqllogictest/hdb-sqllogictest test/sql/p3.01-basic.slt
+
+statement ok
+CREATE TABLE student (id INT PRIMARY KEY, name VARCHAR(16), gpa FLOAT)
+
+statement ok
+INSERT INTO student VALUES (1, 'alice', 3.5)
+
+statement ok
+INSERT INTO student VALUES (2, 'bob', 3.0), (3, 'carol', 3.8)
+
+statement error
+INSERT INTO student VALUES (1, 'dup', 2.0)
+
+statement error
+SELECT no_such_col FROM student
+
+query
+SELECT id, name FROM student WHERE gpa > 3.2
+----
+1|alice
+3|carol
+
+query
+SELECT name FROM student ORDER BY id DESC LIMIT 2
+----
+carol
+bob
+
+query
+SELECT COUNT(id) FROM student
+----
+3
+
+query
+SELECT id FROM student WHERE id = 2
+----
+2

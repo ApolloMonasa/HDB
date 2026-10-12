@@ -1,0 +1,10 @@
+# HDB 代码风格（基于 Google 风格微调，行宽 120，4 空格缩进）
+# 使用方法：clang-format -i src/**/\*.{h,cpp}（需要安装 clang-format）
+---
+BasedOnStyle: Google
+IndentWidth: 4
+ColumnLimit: 120
+AccessModifierOffset: -4
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+IncludeBlocks: Preserve
